@@ -42,7 +42,8 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex lg:p-10 p-5 flex-col h-screen bg-gray-900 text-white">
+      <h1 className="text-3xl font-bold mb-4 text-center">Role GPT</h1>
       <ChatWindow messages={messages} />
       <ChatInput
         input={input}
