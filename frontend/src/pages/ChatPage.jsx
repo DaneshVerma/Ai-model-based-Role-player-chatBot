@@ -1,4 +1,3 @@
-// src/pages/ChatPage.jsx
 import { useState } from "react";
 import { sendStreamMessage } from "../services/api";
 import ChatWindow from "../components/ChatWindow";
@@ -18,30 +17,32 @@ export default function ChatPage() {
     setInput("");
 
     // Add placeholder assistant message
-    let assistantMsg = { role: "assistant", text: "" };
-    setMessages((prev) => [...prev, assistantMsg]);
+    const assistantIndex = messages.length + 1;
+    setMessages((prev) => [...prev, { role: "assistant", text: "" }]);
 
     try {
       await sendStreamMessage(role, userMsg.text, (partial) => {
-        assistantMsg = {
-          role: "assistant",
-          text: (assistantMsg.text || "") + partial, // append instead of replace
-        };
-        setMessages((prev) => [...prev.slice(0, -1), assistantMsg]);
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[assistantIndex] = { role: "assistant", text: partial }; // update same index
+          return updated;
+        });
       });
     } catch (error) {
       console.error("Streaming error:", error);
-      assistantMsg = {
-        role: "assistant",
-        text: "⚠️ Failed to get response. Please try again.",
-      };
-      setMessages((prev) => [...prev.slice(0, -1), assistantMsg]);
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[assistantIndex] = {
+          role: "assistant",
+          text: "⚠️ Failed to get response. Please try again.",
+        };
+        return updated;
+      });
     }
   };
 
   return (
-    <div className='flex flex-col h-screen p-10 bg-gray-900 text-white'>
-        <h1 className="text text-center text-2xl font-bold mb-4">Role Based Chat-bot</h1>
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
       <ChatWindow messages={messages} />
       <ChatInput
         input={input}

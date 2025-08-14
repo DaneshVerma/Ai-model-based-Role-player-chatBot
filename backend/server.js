@@ -38,23 +38,19 @@ app.post("/chat/simple", async (req, res) => {
 });
 
 // Streaming endpoint: forwards token chunks to frontend
-// Streaming endpoint: forwards token chunks to frontend
 app.post("/chat/stream", async (req, res) => {
   const { role, message } = req.body || {};
   if (!message) return res.status(400).json({ error: "message required" });
 
-  // Role prompt from roles.js
+  // Build strict role persona prompt
   const rolePrompt = rolePrompts[role] || rolePrompts.teacher;
-
-  // Final prompt with strict style instructions
   const finalPrompt = `${rolePrompt}
-Speak in the exact persona tone of "${role}".
-Keep answers short, direct, and to the point.
-If referring to yourself, do so in the role’s persona.
-Do not break character.
+Always speak in the exact tone/personality of the role.
+Keep answers short, straight to the point, and refer to yourself as that role when relevant.
 If unsure, say you don't know.
 
-User: ${message}`;
+User: ${message}
+Assistant:`;
 
   try {
     const ollamaRes = await fetch(`${OLLAMA_HOST}/api/generate`, {
@@ -66,12 +62,13 @@ User: ${message}`;
         stream: true,
       }),
     });
-role
+
     if (!ollamaRes.ok || !ollamaRes.body) {
       const text = await ollamaRes.text().catch(() => "");
       return res.status(500).send(`Ollama responded with error: ${text}`);
     }
 
+    // Streaming headers
     res.writeHead(200, {
       "Content-Type": "text/plain; charset=utf-8",
       "Transfer-Encoding": "chunked",
@@ -79,21 +76,25 @@ role
       Connection: "keep-alive",
     });
 
+    const decoder = new TextDecoder("utf-8");
+
+    // Read streamed chunks properly
     for await (const chunk of ollamaRes.body) {
-      const lines = chunk.toString().split("\n").filter(Boolean);
+      const decoded = decoder.decode(chunk, { stream: true });
+      const lines = decoded.split("\n").filter(Boolean);
 
       for (const line of lines) {
         try {
           const parsed = JSON.parse(line);
           if (parsed.response) {
-            res.write(parsed.response);
+            res.write(parsed.response); // send token to frontend
           }
           if (parsed.done) {
             res.end();
             return;
           }
         } catch {
-          res.write(line);
+          res.write(line); // fallback for non-JSON lines
         }
       }
     }
@@ -106,6 +107,7 @@ role
     } catch {}
   }
 });
+
 
 app.listen(PORT, () =>
   console.log(`✅ Backend listening http://localhost:${PORT}`)
