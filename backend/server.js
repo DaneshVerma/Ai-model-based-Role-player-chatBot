@@ -43,9 +43,18 @@ app.post("/chat/stream", async (req, res) => {
   const { role, message } = req.body || {};
   if (!message) return res.status(400).json({ error: "message required" });
 
-  // Build prompt
+  // Role prompt from roles.js
   const rolePrompt = rolePrompts[role] || rolePrompts.teacher;
-  const finalPrompt = `${rolePrompt}\nUse the context you know. If unsure, say you don't know.\n\nUser: ${message}\nAssistant:`;
+
+  // Final prompt with strict style instructions
+  const finalPrompt = `${rolePrompt}
+Speak in the exact persona tone of "${role}".
+Keep answers short, direct, and to the point.
+If referring to yourself, do so in the role’s persona.
+Do not break character.
+If unsure, say you don't know.
+
+User: ${message}`;
 
   try {
     const ollamaRes = await fetch(`${OLLAMA_HOST}/api/generate`, {
@@ -54,24 +63,22 @@ app.post("/chat/stream", async (req, res) => {
       body: JSON.stringify({
         model: "gemma3:1b",
         prompt: finalPrompt,
-        stream: true
-      })
+        stream: true,
+      }),
     });
-
+role
     if (!ollamaRes.ok || !ollamaRes.body) {
       const text = await ollamaRes.text().catch(() => "");
       return res.status(500).send(`Ollama responded with error: ${text}`);
     }
 
-    // Streaming headers
     res.writeHead(200, {
       "Content-Type": "text/plain; charset=utf-8",
       "Transfer-Encoding": "chunked",
       "Cache-Control": "no-cache",
-      Connection: "keep-alive"
+      Connection: "keep-alive",
     });
 
-    // Read chunks from Ollama and forward to client
     for await (const chunk of ollamaRes.body) {
       const lines = chunk.toString().split("\n").filter(Boolean);
 
@@ -86,7 +93,6 @@ app.post("/chat/stream", async (req, res) => {
             return;
           }
         } catch {
-          // If not JSON, forward as raw text
           res.write(line);
         }
       }

@@ -40,7 +40,8 @@ export default function ChatPage() {
   };
 
   return (
-    <div className='flex flex-col h-screen bg-gray-900 text-white'>
+    <div className='flex flex-col h-screen p-10 bg-gray-900 text-white'>
+        <h1 className="text text-center text-2xl font-bold mb-4">Role Based Chat-bot</h1>
       <ChatWindow messages={messages} />
       <ChatInput
         input={input}
