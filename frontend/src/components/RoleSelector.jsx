@@ -9,8 +9,14 @@ const RoleSelector = ({ setRole, role})=>{
         <option value="default">Default</option>
         <option value="teacher">Teacher</option>
         <option value="doctor">Doctor</option>
-        <option value="developer">Developer</option>
-        <option value="friend">Friend</option>
+        <option value="lawyer">lawyer</option>
+        <option value="buddy">buddy</option>
+        <option value="fitnessTrainer">fitnessTrainer</option>
+        <option value="chef">chef</option>
+        <option value="travelGuide">travelGuide</option>
+        <option value="motivationalCoach">motivationalCoach</option>
+        <option value="comedian">comedian</option>
+        <option value="techExpert">techExpert</option>
       </select>
     </div>
   );

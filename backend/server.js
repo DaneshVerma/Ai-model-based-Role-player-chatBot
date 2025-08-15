@@ -19,7 +19,7 @@ app.post("/chat/simple", async (req, res) => {
     const { role, message } = req.body;
     const prompt = `${
       rolePrompts[role] || rolePrompts.teacher
-    }\nUser: ${message}\nAssistant:`;
+    }\nUser: ${message}`;
     const r = await fetch(`${OLLAMA_HOST}/api/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -46,11 +46,10 @@ app.post("/chat/stream", async (req, res) => {
   const rolePrompt = rolePrompts[role] || rolePrompts.teacher;
   const finalPrompt = `${rolePrompt}
 Always speak in the exact tone/personality of the role.
-Keep answers short, straight to the point, and refer to yourself as that role when relevant.
+Keep answers short, straight to the point.
 If unsure, say you don't know.
 
-User: ${message}
-Assistant:`;
+User: ${message}`;
 
   try {
     const ollamaRes = await fetch(`${OLLAMA_HOST}/api/generate`, {
